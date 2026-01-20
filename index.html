@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CipherDash - Signal Encryption Puzzle Game</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="game-header">
+        <h1>⚡ CipherDash ⚡</h1>
+        <p class="subtitle">Encrypt signals through modular cipher nodes</p>
+      </header>
+
+      <main class="game-main">
+        <!-- Level Info Panel -->
+        <section class="panel level-panel">
+          <div id="level-info">
+            <!-- Populated by game.js -->
+          </div>
+        </section>
+
+        <!-- Signal Input/Output Section -->
+        <section class="panel signals-panel">
+          <div class="signal-group">
+            <div class="signal-label">📡 Plaintext Signal</div>
+            <div class="signal-display" id="plaintext-display">
+              (no signal)
+            </div>
+          </div>
+
+          <div class="signal-arrow">→</div>
+
+          <div class="signal-group">
+            <div class="signal-label">🔐 Encrypted Signal</div>
+            <div class="signal-display" id="ciphertext-display">
+              (build cipher)
+            </div>
+          </div>
+        </section>
+
+        <!-- Cipher Pipeline Section -->
+        <section class="panel pipeline-panel">
+          <h3>Cipher Pipeline</h3>
+          <div class="pipeline-container" id="pipeline-display">
+            <div class="pipeline-empty">No nodes added yet</div>
+          </div>
+        </section>
+
+        <!-- Objective Panel -->
+        <section class="panel objective-panel">
+          <h3>🎯 Level Objective</h3>
+          <div id="objective-display">
+            <!-- Populated by game.js -->
+          </div>
+          <div id="resources-display" class="resources-counter">
+            <!-- Resource usage shown here -->
+          </div>
+        </section>
+
+        <!-- Node Builder Section is now HIDDEN - only polygon builder -->
+        <section class="panel builder-panel" style="display: none;">
+          <h3>Build Your Cipher</h3>
+
+          <div class="node-group">
+            <div class="node-option">
+              <label for="shift-key">Shift Node</label>
+              <input
+                type="number"
+                id="shift-key"
+                min="1"
+                max="25"
+                value="3"
+                class="key-input"
+              />
+              <button id="btn-shift" class="btn btn-primary">Add Shift</button>
+              <span class="node-hint">Caesar cipher: shift by N</span>
+            </div>
+
+            <div class="node-option">
+              <label>Reverse Node</label>
+              <button id="btn-reverse" class="btn btn-primary">
+                Add Reverse
+              </button>
+              <span class="node-hint">Reverses signal: HELLO → OLLEH</span>
+            </div>
+
+            <div class="node-option">
+              <label for="multiply-key">Multiply Node</label>
+              <input
+                type="number"
+                id="multiply-key"
+                min="1"
+                max="25"
+                value="5"
+                class="key-input"
+              />
+              <button id="btn-multiply" class="btn btn-primary">
+                Add Multiply
+              </button>
+              <span class="node-hint">Affine cipher: multiply by N (mod 26)</span>
+            </div>
+          </div>
+
+          <div class="controls">
+            <button id="btn-remove" class="btn btn-secondary">
+              Remove Last Node
+            </button>
+            <button id="btn-reset" class="btn btn-secondary">
+              Clear All
+            </button>
+          </div>
+        </section>
+
+        <!-- Polygon Builder Section -->
+        <section class="panel polygon-panel">
+          <h3>Geometric Cipher Constructor</h3>
+          <p class="polygon-instructions">
+            Click on the canvas to add vertices. Right-click to remove. Drag vertices to adjust.
+            Assemble a valid polygon to add as a cipher node.
+          </p>
+
+          <div class="polygon-container">
+            <div class="polygon-canvas-wrapper">
+              <canvas id="polygon-canvas" width="400" height="300"></canvas>
+              <div class="canvas-hint">
+                Click to add • Right-click to remove • Drag to adjust
+              </div>
+            </div>
+
+            <div class="polygon-info">
+              <div id="polygon-analysis">
+                <!-- Analysis populated by PolygonAnalyzer -->
+              </div>
+
+              <div class="polygon-controls">
+                <button id="btn-polygon-clear" class="btn btn-secondary">
+                  Clear Polygon
+                </button>
+                <button id="btn-polygon-add" class="btn btn-primary" disabled>
+                  Add to Pipeline
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Transmit Section -->
+        <section class="panel transmit-panel">
+          <button id="btn-transmit" class="btn btn-transmit">
+            🚀 Transmit Signal
+          </button>
+          <p class="info-text">
+            Test your cipher against simulated attacks
+          </p>
+        </section>
+
+        <!-- Results Section -->
+        <section class="panel results-panel">
+          <div id="results-display">
+            <!-- Populated after transmission -->
+          </div>
+        </section>
+
+        <!-- Next Level Button -->
+        <section class="panel next-level-panel">
+          <button id="btn-next" class="btn btn-success" style="display: none">
+            ✓ Proceed to Next Level
+          </button>
+        </section>
+      </main>
+
+      <footer class="game-footer">
+        <p>
+          🔒 A hackathon MVP for learning about cryptography through play
+        </p>
+        <p>
+          Plaintext + Cipher Pipeline = Ciphertext | Scored against attacks
+        </p>
+      </footer>
+    </div>
+
+    <!-- Script Imports -->
+    <script src="nodes.js"></script>
+    <script src="evaluator.js"></script>
+    <script src="attack.js"></script>
+    <script src="polygon-builder.js"></script>
+    <script src="game.js"></script>
+  </body>
+</html>
