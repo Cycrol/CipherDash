@@ -99,7 +99,6 @@ function isIdentical(plaintext, ciphertext) {
 
 /**
  * Estimate key space size based on pipeline configuration
- * Polygon nodes have variable key space based on shape properties
  * @param {CipherPipeline} pipeline - The cipher pipeline
  * @returns {number} - Approximate key space (log2)
  */
@@ -116,21 +115,6 @@ function estimateKeySpace(pipeline) {
         break;
       case 'reverse':
         bits += 1; // Either reversed or not (binary choice)
-        break;
-      case 'polygon':
-        // Polygon key space depends on shape properties
-        if (node.numSides) {
-          // More sides = larger key space
-          bits += Math.log2(Math.max(3, node.numSides * 2));
-        }
-        // Irregular shapes add entropy
-        if (node.sideVariance && node.sideVariance > 1) {
-          bits += Math.log2(1 + node.sideVariance * 2);
-        }
-        // Convex polygons apply secondary transform
-        if (node.convex) {
-          bits += 3; // Secondary multiply transform adds 3 bits
-        }
         break;
       default:
         bits += 1;
@@ -149,9 +133,9 @@ function estimateKeySpace(pipeline) {
  * @returns {object} - Score breakdown with total score and component scores
  */
 function evaluateCipher(plaintext, ciphertext, pipeline) {
-  let score = 75; // Base score increased for higher starting point
+  let score = 60; // Base score (increased for easier difficulty)
   const breakdown = {
-    base: 75,
+    base: 60,
     entropy: 0,
     diffusion: 0,
     keySpace: 0,
@@ -159,26 +143,26 @@ function evaluateCipher(plaintext, ciphertext, pipeline) {
     final: 0
   };
 
-  // 1. ENTROPY BOOST (0-35 points, significantly increased)
+  // 1. ENTROPY BOOST (0-20 points, reduced from 25)
   // Higher entropy = less predictable patterns
   const ciphertextEntropy = calculateEntropy(ciphertext);
   const plaintextEntropy = calculateEntropy(plaintext);
   const entropyDelta = Math.max(0, ciphertextEntropy - plaintextEntropy);
-  const entropyBoost = Math.min(35, entropyDelta * 12);
+  const entropyBoost = Math.min(20, entropyDelta * 8);
   breakdown.entropy = entropyBoost;
   score += entropyBoost;
 
-  // 2. DIFFUSION (0-25 points, significantly increased)
+  // 2. DIFFUSION (0-12 points, reduced from 15)
   // How many characters changed = how well changes propagate
   const diffusion = calculateDiffusion(plaintext, ciphertext);
-  const diffusionScore = Math.min(25, diffusion * 0.25);
+  const diffusionScore = Math.min(12, diffusion * 0.12);
   breakdown.diffusion = diffusionScore;
   score += diffusionScore;
 
-  // 3. KEY SPACE (0-15 points, significantly increased)
+  // 3. KEY SPACE (0-8 points, reduced from 10)
   // Larger key space = harder to brute force
   const keySpaceBits = estimateKeySpace(pipeline);
-  const keySpaceScore = Math.min(15, keySpaceBits);
+  const keySpaceScore = Math.min(8, keySpaceBits);
   breakdown.keySpace = keySpaceScore;
   score += keySpaceScore;
 
@@ -186,34 +170,34 @@ function evaluateCipher(plaintext, ciphertext, pipeline) {
 
   // Penalty: Identical output (identity transformation)
   if (isIdentical(plaintext, ciphertext)) {
-    breakdown.penalties -= 15; // Reduced from 25
-    score -= 15;
+    breakdown.penalties -= 25; // Reduced from 30
+    score -= 25;
   }
 
   // Penalty: Simple reversal only
   if (isSimpleReversal(plaintext, ciphertext)) {
-    breakdown.penalties -= 10; // Reduced from 15
-    score -= 10;
+    breakdown.penalties -= 15; // Reduced from 20
+    score -= 15;
   }
 
   // Penalty: Very low diffusion (< 30% of characters changed)
   if (diffusion < 30) {
-    breakdown.penalties -= 5; // Reduced from 10
-    score -= 5;
+    breakdown.penalties -= 10; // Reduced from 15
+    score -= 10;
   }
 
   // Penalty: Frequency skew indicates weak cipher
   const freqSkew = analyzeFrequencySkew(ciphertext);
   if (freqSkew < 20) {
     // Too uniform = suspicious
-    breakdown.penalties -= 3; // Reduced from 5
-    score -= 3;
+    breakdown.penalties -= 5; // Reduced from 10
+    score -= 5;
   }
 
   // Penalty: No pipeline (no transformation at all)
   if (pipeline.isEmpty()) {
-    breakdown.penalties -= 25; // Reduced from 40
-    score -= 25;
+    breakdown.penalties -= 40; // Reduced from 50
+    score -= 40;
   }
 
   // Final score clamped to 0-100
@@ -266,45 +250,3 @@ function generateFeedback(breakdown, plaintext, ciphertext) {
 
   return feedback;
 }
-
-/**
- * Calculate dynamic security threshold based on pipeline polygon properties
- * Wackier/more irregular shapes have higher thresholds (they're stronger)
- * @param {CipherPipeline} pipeline - The cipher pipeline
- * @returns {number} - Adjusted threshold value (0-100)
- */
-function calculateDynamicThreshold(pipeline) {
-  let baseThreshold = 15; // Very low base threshold
-  
-  for (const node of pipeline.nodes) {
-    if (node.type === 'polygon') {
-      // Start with a baseline for this polygon
-      let polygonThreshold = 5;
-      
-      // More sides = stronger cipher = slightly higher threshold
-      if (node.numSides >= 3 && node.numSides <= 8) {
-        polygonThreshold += node.numSides * 0.8;
-      } else if (node.numSides > 8) {
-        polygonThreshold += 10;
-      }
-      
-      // Irregular shapes (high variance) = stronger diffusion = higher threshold
-      if (node.sideVariance > 3) {
-        polygonThreshold += 8; // "Wacky" shape bonus
-      } else if (node.sideVariance > 1.5) {
-        polygonThreshold += 4; // Moderate irregularity
-      }
-      
-      // Convex polygons get a small bonus (they apply secondary transform)
-      if (node.convex) {
-        polygonThreshold += 2;
-      }
-      
-      baseThreshold += polygonThreshold;
-    }
-  }
-  
-  // Clamp to reasonable range
-  return Math.max(10, Math.min(35, baseThreshold));
-}
-
