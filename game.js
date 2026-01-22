@@ -242,10 +242,54 @@ class CipherDashGame {
     this.pipeline.clear();
     this.ciphertext = '';
     this.lastScore = null;
+    this.lastResults = null;
     this.gameState = 'building';
+    
+    // Clear polygon builder for new level
+    this.clearPolygon();
 
     console.log(`Loaded Level ${levelNum}: "${this.plaintext}"`);
+    
+    // Show visual level change indicator
+    this.displayLevelChangeNotification(levelNum);
+    
     this.updateUI();
+  }
+
+  /**
+   * Display a clear notification when level changes
+   */
+  displayLevelChangeNotification(levelNum) {
+    const levelData = this.levels[levelNum - 1];
+    const header = document.querySelector('.game-header');
+    
+    if (!header) return;
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'level-change-notification';
+    notification.innerHTML = `
+      <div class="level-change-content">
+        <h2>LEVEL ${levelNum}</h2>
+        <p class="level-title">${levelData.description}</p>
+        <p class="level-objective">${levelData.objective}</p>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 10);
+    
+    // Remove after animation completes
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        notification.remove();
+      }, 500);
+    }, 2500);
   }
 
   /**
@@ -339,7 +383,12 @@ class CipherDashGame {
     // Check if passed (and objective met)
     const levelData = this.levels[this.currentLevel - 1];
     const objectiveCheck = this.checkObjectiveMet();
-    const passed = checkPass(threatenedScore, levelData.threshold) && objectiveCheck.met;
+    
+    // Calculate dynamic threshold based on polygon shape complexity
+    const dynamicThreshold = calculateDynamicThreshold(this.pipeline);
+    const finalThreshold = dynamicThreshold;
+    
+    const passed = checkPass(threatenedScore, finalThreshold) && objectiveCheck.met;
 
     // Store results for UI display
     this.lastResults = {
@@ -350,7 +399,7 @@ class CipherDashGame {
       objectiveCheck,
       feedback: generateFeedback(scoreBreakdown, this.plaintext, this.ciphertext),
       patterns: detectPatterns(this.ciphertext),
-      threshold: levelData.threshold
+      threshold: finalThreshold
     };
 
     this.gameState = passed ? 'complete' : 'idle';
@@ -692,6 +741,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize polygon builder with game reference for level constraints
   game.polygonBuilder = new PolygonBuilder('polygon-canvas', { gameRef: game });
   game.polygonAnalyzer = new PolygonAnalyzer('polygon-analysis');
+
+  // Initialize background music
+  const bgmPlayer = document.getElementById('bgm-player');
+  if (bgmPlayer) {
+    bgmPlayer.play().catch(err => {
+      console.log('Background music autoplay prevented by browser:', err);
+      // Add a play button handler if autoplay is blocked
+      document.addEventListener('click', () => {
+        if (bgmPlayer.paused) {
+          bgmPlayer.play().catch(e => console.log('BGM play error:', e));
+        }
+      }, { once: true });
+    });
+  }
 
   // Wire up UI buttons
   document.getElementById('btn-shift')?.addEventListener('click', () => {
