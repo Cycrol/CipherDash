@@ -840,7 +840,21 @@ class CipherDashGame {
 
     const addBtn = document.getElementById('btn-polygon-add');
     if (addBtn) {
-      addBtn.disabled = !this.polygonBuilder.isValid;
+      // For line mode: button is enabled if there are completed lines or if we have 2 points
+      if (this.polygonBuilder.mode === 'line') {
+        const hasCompletedLines = this.polygonBuilder.completedLines && this.polygonBuilder.completedLines.length > 0;
+        const hasCurrentLine = this.polygonBuilder.linePoints && this.polygonBuilder.linePoints.length === 2;
+        addBtn.disabled = !(hasCompletedLines || hasCurrentLine);
+        if (hasCompletedLines) {
+          addBtn.textContent = `Add ${this.polygonBuilder.completedLines.length} Line(s)`;
+        } else {
+          addBtn.textContent = 'Add to Pipeline';
+        }
+      } else {
+        // For polygon mode: button is enabled if polygon is valid
+        addBtn.disabled = !this.polygonBuilder.isValid;
+        addBtn.textContent = 'Add to Pipeline';
+      }
     }
 
     // Show error message if invalid
