@@ -762,16 +762,24 @@ class CipherDashGame {
    * Add a polygon or line node from the builder
    */
   addPolygonNode() {
-    if (!this.polygonBuilder || !this.polygonBuilder.isValid) {
-      console.error('Geometry is not valid');
+    if (!this.polygonBuilder) {
+      console.error('Polygon builder not initialized');
       return;
     }
 
     const isLineMode = this.polygonBuilder.mode === 'line';
 
+    // For line mode, check if we have completed lines or current line
     if (isLineMode) {
+      const completedLines = this.polygonBuilder.completedLines || [];
+      const hasLines = completedLines.length > 0 || (this.polygonBuilder.linePoints && this.polygonBuilder.linePoints.length === 2);
+      
+      if (!hasLines) {
+        console.error('No lines to add');
+        return;
+      }
+      
       // Add all completed lines
-      const completedLines = this.polygonBuilder.getCompletedLines();
       let addedCount = 0;
       
       for (const line of completedLines) {
@@ -799,7 +807,12 @@ class CipherDashGame {
       this.polygonBuilder.validationError = '0/2 points in current line';
       this.polygonBuilder.draw();
     } else {
-      // Add polygon node
+      // Polygon mode - check if valid
+      if (!this.polygonBuilder.isValid) {
+        console.error('Polygon is not valid');
+        return;
+      }
+
       const resources = this.getResourceUsage();
       if (resources.nodesUsed >= resources.nodesMax) {
         alert(`Node limit reached! (${resources.nodesMax} max per level)`);
