@@ -116,7 +116,18 @@
         <!-- Polygon Builder Section -->
         <section class="panel polygon-panel">
           <h3>Geometric Cipher Constructor</h3>
-          <p class="polygon-instructions">
+          
+          <!-- Mode Selection -->
+          <div class="mode-selector">
+            <button id="btn-mode-polygon" class="btn btn-mode btn-mode-active">
+              🔷 Polygon
+            </button>
+            <button id="btn-mode-line" class="btn btn-mode">
+              📏 Line
+            </button>
+          </div>
+
+          <p class="polygon-instructions" id="mode-instructions">
             Click on the canvas to add vertices. Right-click to remove. Drag vertices to adjust.
             Assemble a valid polygon to add as a cipher node.
           </p>
@@ -136,7 +147,7 @@
 
               <div class="polygon-controls">
                 <button id="btn-polygon-clear" class="btn btn-secondary">
-                  Clear Polygon
+                  Clear
                 </button>
                 <button id="btn-polygon-add" class="btn btn-primary" disabled>
                   Add to Pipeline
@@ -184,7 +195,6 @@
     <!-- Script Imports -->
     <script src="nodes.js"></script>
     <script src="evaluator.js"></script>
-    <script src="attack.js"></script>
     <script src="polygon-builder.js"></script>
     <script src="game.js"></script>
 
