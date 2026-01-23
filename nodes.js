@@ -412,3 +412,66 @@ class PolygonNode extends CipherNode {
     return analysis;
   }
 }
+
+/**
+ * LineNode - Geometric line cipher
+ * Transforms signal based on the angle and length of a drawn line
+ */
+class LineNode extends CipherNode {
+  constructor(point1, point2) {
+    super('line', 'Line');
+    this.point1 = point1;
+    this.point2 = point2;
+    this.type = 'line';
+    
+    // Calculate line properties
+    this.dx = point2.x - point1.x;
+    this.dy = point2.y - point1.y;
+    this.length = Math.sqrt(this.dx * this.dx + this.dy * this.dy);
+    this.angle = Math.atan2(this.dy, this.dx);
+    this.angleDegrees = (this.angle * 180 / Math.PI) % 360;
+    
+    // Use angle and length for transformation
+    this.key = Math.round((Math.abs(this.angle) * 180 / Math.PI) % 26) || 1;
+  }
+
+  /**
+   * Apply line-based cipher transformation
+   */
+  apply(input, key = this.key) {
+    if (!input || typeof input !== 'string') return input;
+    
+    // Use angle-based shift
+    const shift = Math.round((Math.abs(this.angle) * 180 / Math.PI)) % 26;
+    
+    return input
+      .split('')
+      .map(char => {
+        if (!/[A-Z]/.test(char)) return char;
+        const code = char.charCodeAt(0) - 65;
+        const shifted = (code + shift) % 26;
+        return String.fromCharCode(shifted + 65);
+      })
+      .join('');
+  }
+
+  describe() {
+    const angleStr = this.angleDegrees.toFixed(1);
+    const lengthStr = this.length.toFixed(1);
+    return `${this.name} (angle: ${angleStr}°, length: ${lengthStr}px)`;
+  }
+
+  /**
+   * Get line geometry information
+   */
+  getGeometry() {
+    return {
+      angle: this.angleDegrees,
+      length: this.length,
+      shift: this.key,
+      point1: this.point1,
+      point2: this.point2
+    };
+  }
+}
+
